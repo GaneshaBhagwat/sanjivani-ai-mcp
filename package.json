@@ -1,0 +1,31 @@
+
+{
+  "name": "sanjivani-ai-mcp",
+  "version": "1.0.0",
+  "description": "AI-powered Sugarcane Farmer Information System using MCP and PostgreSQL",
+  "scripts": {
+    "start": "tsx client.ts",
+    "check": "tsc --noEmit",
+    "backend:api": "tsx backend/api-server.ts",
+    "mcp:server": "tsx server.ts"
+  },
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dotenv": "^18.0.7",
+    "openai": "^7.32.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
+

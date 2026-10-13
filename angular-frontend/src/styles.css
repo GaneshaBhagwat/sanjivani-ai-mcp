@@ -1,0 +1,28 @@
+/* Global styles — Sanjivani AI Chatbot */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #f7f8f7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure host-element fills the viewport */
+app-root {
+  display: block;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Remove default focus outlines in favor of component-level ones */
+:focus-visible {
+  outline: 2px solid #1a5c3a;
+  outline-offset: 2px;
+}
+
+/* Thin scrollbars globally */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d0e0d4 transparent;
+}

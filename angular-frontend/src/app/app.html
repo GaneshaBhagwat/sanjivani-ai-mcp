@@ -1,0 +1,234 @@
+<div class="chat-shell" [class.sidebar-open]="sidebarOpen">
+
+  <!-- ══════════════════════════════════════════════════════════ SIDEBAR -->
+  <aside class="sidebar" [class.open]="sidebarOpen">
+
+    <!-- Brand -->
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="36" rx="10" fill="#1a5c3a"/>
+          <path d="M18 6 C14 10 10 16 10 22 C10 27 13.5 30 18 30 C22.5 30 26 27 26 22 C26 16 22 10 18 6Z" fill="#d6f078"/>
+          <path d="M18 12 C16 15 15 18 15 22 C15 25 16.3 27 18 27" stroke="#1a5c3a" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">Sanjivani AI</span>
+        <span class="brand-sub">Sugar Factory Assistant</span>
+      </div>
+      <button class="sidebar-close-btn" (click)="toggleSidebar()" aria-label="Close sidebar">✕</button>
+    </div>
+
+    <!-- New Chat -->
+    <button class="new-chat-btn" (click)="newChat()">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10 4v12M4 10h12" stroke-linecap="round"/>
+      </svg>
+      New Chat
+    </button>
+
+    <!-- DB Status -->
+    <div class="db-status-block">
+      <div class="db-status-row">
+        <span class="status-label">Database</span>
+        <span class="status-pill"
+          [class.pill-ok]="dbStatus.status === 'connected'"
+          [class.pill-err]="dbStatus.status === 'unavailable'"
+          [class.pill-unknown]="dbStatus.status === 'unknown' || dbStatus.checking">
+          <span class="pill-dot"></span>
+          {{ dbStatus.checking ? 'Checking…' : (dbStatus.status === 'connected' ? 'Connected' : 'Offline') }}
+        </span>
+      </div>
+      <div class="db-status-row">
+        <span class="status-label">OpenAI</span>
+        <span class="status-pill"
+          [class.pill-ok]="dbStatus.openai === 'configured'"
+          [class.pill-err]="dbStatus.openai === 'missing'"
+          [class.pill-unknown]="dbStatus.openai === 'unknown'">
+          <span class="pill-dot"></span>
+          {{ dbStatus.openai === 'configured' ? 'Ready' : (dbStatus.openai === 'missing' ? 'No Key' : '…') }}
+        </span>
+      </div>
+      <button class="recheck-btn" (click)="checkHealth()" [disabled]="dbStatus.checking">
+        ↻ Recheck
+      </button>
+    </div>
+
+    <!-- Chat History -->
+    <div class="history-section" *ngIf="sessions.length > 0">
+      <p class="section-label">RECENT CHATS</p>
+      <ul class="history-list">
+        <li *ngFor="let s of sessions; trackBy: trackById"
+            class="history-item"
+            [class.active]="activeSession?.id === s.id"
+            (click)="switchSession(s)">
+          <span class="history-icon">💬</span>
+          <span class="history-title">{{ s.title }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Quick Questions -->
+    <div class="quick-section">
+      <p class="section-label">QUICK QUESTIONS</p>
+      <ul class="quick-list">
+        <li *ngFor="let q of suggestions"
+            class="quick-item"
+            (click)="selectSuggestion(q)">
+          <span class="quick-arrow">›</span>
+          {{ q }}
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-footer">
+      <span>Sanjivani Sugar Factory</span>
+      <span>AI Dashboard v2</span>
+    </div>
+
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" *ngIf="sidebarOpen" (click)="toggleSidebar()"></div>
+
+  <!-- ══════════════════════════════════════════════════════════ MAIN -->
+  <div class="chat-main">
+
+    <!-- Top bar -->
+    <header class="chat-topbar">
+      <button class="topbar-menu-btn" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="topbar-brand">
+        <div class="topbar-logo">🌱</div>
+        <span>Sanjivani AI</span>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="topbar-new-btn" (click)="newChat()" title="New chat">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 4v12M4 10h12" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── CHAT MESSAGES AREA ── -->
+    <div class="message-list" #messageList>
+
+      <!-- ── WELCOME SCREEN (no messages) ── -->
+      <div class="welcome-screen" *ngIf="!hasMessages">
+
+        <div class="welcome-logo">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="64" height="64" rx="18" fill="#1a5c3a"/>
+            <path d="M32 10 C25 18 18 28 18 38 C18 47 24 54 32 54 C40 54 46 47 46 38 C46 28 39 18 32 10Z" fill="#d6f078"/>
+            <path d="M32 20 C29 26 27 32 27 38 C27 43 29 48 32 50" stroke="#1a5c3a" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <h1 class="welcome-heading">Welcome to Sanjivani AI</h1>
+        <p class="welcome-sub">Your intelligent assistant for sugar factory data.</p>
+
+        <div class="suggestion-grid">
+          <button
+            *ngFor="let q of suggestions"
+            class="suggestion-card"
+            (click)="selectSuggestion(q)">
+            <span class="suggestion-icon">💬</span>
+            <span class="suggestion-text">{{ q }}</span>
+          </button>
+        </div>
+
+        <p class="welcome-note">
+          Powered by OpenAI · Connected to PostgreSQL · Sanjivani Sugar Factory
+        </p>
+      </div>
+
+      <!-- ── MESSAGES ── -->
+      <div class="messages-feed" *ngIf="hasMessages">
+        <div
+          *ngFor="let msg of messages; trackBy: trackById"
+          class="message-row"
+          [class.row-user]="msg.role === 'user'"
+          [class.row-assistant]="msg.role === 'assistant'"
+          [class.row-error]="msg.role === 'error'">
+
+          <!-- Avatar -->
+          <div class="msg-avatar" *ngIf="msg.role !== 'user'">
+            <svg *ngIf="msg.role === 'assistant'" viewBox="0 0 36 36" fill="none">
+              <rect width="36" height="36" rx="10" fill="#1a5c3a"/>
+              <path d="M18 6C14 10 10 16 10 22c0 5 3.5 8 8 8s8-3 8-8c0-6-4-12-8-16z" fill="#d6f078"/>
+            </svg>
+            <div class="error-avatar" *ngIf="msg.role === 'error'">⚠</div>
+          </div>
+
+          <!-- Bubble -->
+          <div class="msg-bubble-wrap">
+            <div class="msg-bubble" [class.bubble-user]="msg.role === 'user'"
+                 [class.bubble-assistant]="msg.role === 'assistant'"
+                 [class.bubble-error]="msg.role === 'error'">
+              <span *ngIf="msg.role === 'user'">{{ msg.text }}</span>
+              <span *ngIf="msg.role !== 'user'" [innerHTML]="formatText(msg.text)"></span>
+            </div>
+            <div class="msg-time">{{ formatTime(msg.timestamp) }}</div>
+          </div>
+
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="message-row row-assistant" *ngIf="isThinking">
+          <div class="msg-avatar">
+            <svg viewBox="0 0 36 36" fill="none">
+              <rect width="36" height="36" rx="10" fill="#1a5c3a"/>
+              <path d="M18 6C14 10 10 16 10 22c0 5 3.5 8 8 8s8-3 8-8c0-6-4-12-8-16z" fill="#d6f078"/>
+            </svg>
+          </div>
+          <div class="msg-bubble-wrap">
+            <div class="msg-bubble bubble-assistant typing-bubble">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── INPUT AREA ── -->
+    <div class="input-area">
+      <div class="input-wrapper">
+       <textarea
+  #chatInput
+  class="chat-textarea"
+  [(ngModel)]="inputText"
+  (keydown)="onKeydown($event)"
+  placeholder="Ask anything about farmers, production or payments…"
+  rows="1"
+  aria-label="Chat input"
+></textarea>
+
+        <button
+          class="send-btn"
+          (click)="sendMessage()"
+          [disabled]="!inputText.trim() || isThinking"
+          aria-label="Send message">
+          <svg *ngIf="!isThinking" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 10L17 3l-7 14V10H3z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="send-spinner" *ngIf="isThinking"></span>
+        </button>
+      </div>
+
+      <p class="input-hint">
+        Press <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line
+        <span *ngIf="dbStatus.status !== 'connected'" class="hint-warn">
+          · ⚠ Backend offline — start with <code>npm run backend:api</code>
+        </span>
+      </p>
+    </div>
+
+  </div><!-- /chat-main -->
+</div><!-- /chat-shell -->
